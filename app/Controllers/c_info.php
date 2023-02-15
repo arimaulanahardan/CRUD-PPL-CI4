@@ -2,11 +2,13 @@
 
 namespace App\Controllers;
 
-class c_info extends BaseController
+use App\Controllers\BaseController;
+
+class c_Info extends BaseController
 {
-    public function info()
+    public function informasi()
     {
-        $title = "Info";
+        $title = "Page Informasi";
         return view('v_info', compact('title'));
     }
 }

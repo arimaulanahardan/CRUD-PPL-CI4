@@ -2,45 +2,38 @@
 
 namespace App\Controllers;
 
+use App\Models\m_mahasiswa;
+
 class c_mahasiswa extends BaseController
 {
     protected $model;
-    
+
     public function __construct()
     {
-        $this->model = new \App\Models\m_mahasiswa();
+        $this->model = new m_mahasiswa();
     }
 
-    public function display()
+    public function index()
     {
-        $data =  [
-            'name' => 'Ari Maulana Hardan',
-            'title' => 'Mahasiswa'
-        ];
-        return view('Home', $data);
-    }
-
-    public function view_mahasiswa_display()
-    {
-        $model = new \App\Models\m_mahasiswa();
+        $keyword = $this->request->getVar('keyword') ? $this->request->getVar('keyword') : null;
+        $mahasiswa = $keyword ? $this->model->mahasiswaSearch($keyword) : $this->model->getAll();
         $data = [
-            'mahasiswa' => $model->getAll(),
-            'title' => 'Data Mahasiswa'
+            'mahasiswa' => $mahasiswa,
+            'title' => 'Mahasiswa'
         ];
         return view('v_mahasiswa', $data);
     }
 
-    public function detail($nim)
+    public function show($nim)
     {
-        $model = new \App\Models\m_mahasiswa();
         $data = [
-            'mahasiswa' => $model->getMahasiswa($nim),
+            'mahasiswa' => $this->model->getDetailMahasiswa($nim),
             'title' => 'Detail Mahasiswa'
         ];
         return view('v_mahasiswa_detail', $data);
     }
 
-    public function create()
+    public function new()
     {
         $data = [
             'title' => 'Tambah Mahasiswa'
@@ -48,7 +41,8 @@ class c_mahasiswa extends BaseController
         return view('v_mahasiswa_create', $data);
     }
 
-    public function store(){
+    public function create()
+    {
         if (!$this->validate([
             'nim' => [
                 'label' => 'NIM',
@@ -57,7 +51,8 @@ class c_mahasiswa extends BaseController
                     'required' => '{field} harus diisi',
                     'numeric' => '{field} harus berupa angka',
                     'min_length' => '{field} harus berjumlah 9 karakter',
-                    'max_length' => '{field} harus berjumlah 9 karakter'
+                    'max_length' => '{field} harus berjumlah 9 karakter',
+                    'is_unique' => '{field} sudah terdaftar'
                 ]
             ],
             'nama' => [
@@ -81,15 +76,82 @@ class c_mahasiswa extends BaseController
                 'title' => 'Store Mahasiswa Error !'
             ]);
         }
-            $data = [
-                'nim' => $this->request->getPost('nim'),
-                'nama' => $this->request->getPost('nama'),
-                'umur' => $this->request->getPost('umur')
-            ];
+        $data = [
+            'nim' => $this->request->getPost('nim'),
+            'nama' => $this->request->getPost('nama'),
+            'umur' => $this->request->getPost('umur')
+        ];
 
         $this->model->mahasiswa_store($data);
+        session()->setFlashdata('pesan', 'Data berhasil ditambahkan!');
         return redirect()->to('/mahasiswa');
     }
 
+    public function delete($nim)
+    {
+        $this->model->mahasiswaDelete($nim);
+        session()->setFlashdata('pesan', 'Data berhasil dihapus!');
+        return redirect()->to('/mahasiswa');
+    }
+
+    public function edit($nim)
+    {
+        $data = [
+            'mahasiswa' => $this->model->getDetailMahasiswa($nim),
+            'title' => 'Edit Mahasiswa'
+        ];
+        return view('v_mahasiswa_edit', $data);
+    }
+
+    public function update($nim)
+    {
+        if (!$this->validate([
+            'nama' => [
+                'label' => 'Nama',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => '{field} harus diisi'
+                ]
+            ],
+            'umur' => [
+                'label' => 'Umur',
+                'rules' => 'required|numeric',
+                'errors' => [
+                    'required' => '{field} harus diisi',
+                    'numeric' => '{field} harus berupa angka'
+                ]
+            ]
+        ])) {
+            return view('v_mahasiswa_edit', [
+                'mahasiswa' => $this->model->getDetailMahasiswa($nim),
+                'errors' => $this->validator->getErrors(),
+                'title' => 'Update Mahasiswa Error !'
+            ]);
+        }
+        $data = [
+            'nama' => $this->request->getPost('nama'),
+            'umur' => $this->request->getPost('umur')
+        ];
+
+        $this->model->mahasiswaUpdate($data, $nim);
+        session()->setFlashdata('pesan', 'Data berhasil diubah!');
+        return redirect()->to('/mahasiswa');
+    }
+
+    public function search()
+    {
+        $data = [
+            'mahasiswa' => $this->model->mahasiswaSearch($this->request->getPost('keyword')),
+            'title' => 'Hasil Cari Mahasiswa'
+        ];
+        return view('v_mahasiswa', $data);
+    }
+
+    public function detail(){
+        $data = [
+            'title' => 'Detail Mahasiswa'
+        ];
+        return view('v_mahasiswa_detail', $data);
+    }
 
 }

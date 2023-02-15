@@ -1,11 +1,21 @@
 <?php
+
 namespace App\Controllers;
 
-class c_home extends BaseController
+use App\Controllers\BaseController;
+
+class c_Home extends BaseController
 {
     public function home()
     {
-        $title = "Home";
+        $title = "Home Page";
         return view('v_home', compact('title'));
+    }
+
+    public function merge()
+    {
+        return view('layouts/a')
+            . view('layouts/b')
+            . view('layouts/c');
     }
 }

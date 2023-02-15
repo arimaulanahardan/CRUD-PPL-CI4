@@ -15,6 +15,7 @@ $routes->setDefaultController('Home');
 $routes->setDefaultMethod('index');
 $routes->setTranslateURIDashes(false);
 $routes->set404Override();
+
 // The Auto Routing (Legacy) is very dangerous. It is easy to create vulnerable apps
 // where controller filters or CSRF protection are bypassed.
 // If you don't want to define all routes, please use the Auto Routing (Improved).
@@ -29,21 +30,28 @@ $routes->set404Override();
 
 // We get a performance increase by specifying the default
 // route since we don't have to scan directories.
-// $routes->get('/', 'Home::hello');
-$routes->get('/', 'c_home::home');
-$routes->get('/info', 'c_info::info');
-$routes->get('/display', 'c_mahasiswa::display');
-$routes->get('/mahasiswa', 'c_mahasiswa::view_mahasiswa_display');
-$routes->get('/insert', 'c_mahasiswa::create');
-$routes->post('/insert/add', 'c_mahasiswa::InsertData');
-$routes->get('/mahasiswa/detail/(:num)', 'c_mahasiswa::detail/$1');
 
-$routes->group('mahasiswa/add',  function ($routes) {
-    $routes->get('', "c_mahasiswa::display");
+$routes->get('/', 'c_auth::index');
+$routes->post('/', 'c_auth::login');
+$routes->get('info', "c_info::informasi", ['filter' => 'auth']);
+
+$routes->get('home', 'c_home::home', ['filter' => 'auth']);
+$routes->get('logout', 'c_auth::logout');
+
+// #----> sebelum menggunakan resource
+$routes->group('/' , ['filter' => 'auth'],  function ($routes) {
+    $routes->get('mahasiswa', "c_mahasiswa::index");
     $routes->get('create', "c_mahasiswa::create");
-    // $routes->post('create', "c_mahasiswa::create");
-    $routes->post('store', "c_mahasiswa::store");
+    $routes->post('store', "c_mahasiswa::create");
+    $routes->get('detail/(:num)', "c_mahasiswa::show/$1");
+    $routes->get('edit/(:num)', "c_mahasiswa::edit/$1");
+    $routes->post('update/(:num)', "c_mahasiswa::update/$1");
+    $routes->delete('delete/(:num)', "c_mahasiswa::delete/$1");
 });
+
+// #----> setelah menggunakan resource (gunakan php spark routes pada terminal untuk melihat perbedaannya)
+// $routes->resource('mahasiswa', ['filter' => 'auth'], ['controller' => 'c_mahasiswa']);
+
 
 /*
  * --------------------------------------------------------------------
